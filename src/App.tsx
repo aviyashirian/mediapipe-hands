@@ -13,7 +13,7 @@ function App() {
 
   // Main function
   const runApp = async () => {    
-    const net = await tf.loadLayersModel('http://localhost:3000/saved_model/model.json')
+    const net = await tf.loadLayersModel('http://localhost:3000/saved_model_new_3d/model.json')
 
     detectHands(net)
   };
@@ -71,7 +71,7 @@ function App() {
         // We only get to call updateLandmarks once, so we need to cook the data to
         // fit. The landmarks just merge, but the connections need to be offset.
         const landmarks = results.multiHandWorldLandmarks.reduce(
-            (prev, current) => [...prev, ...current], []).flatMap(landmark => [landmark.x, landmark.y])
+            (prev, current) => [...prev, ...current], []).flatMap(landmark => [landmark.x, landmark.y, landmark.z])
         
         const colors = [];
         let connections: mpHands.LandmarkConnectionArray = [];
@@ -90,14 +90,14 @@ function App() {
           });
         }
 
-        if (landmarks.length === 42) {
+        if (landmarks.length === 63) {
 
           // predict hand signature
-          const landmarksTensor = tf.tensor(landmarks).expandDims().expandDims()
-          const arr = (net.predict(landmarksTensor) as tf.Tensor[])
-          const pred = arr[0].dataSync() as Float32Array
+          const landmarksTensor = tf.tensor(landmarks).expandDims()
+          const arr = (net.predict(landmarksTensor) as tf.Tensor)
+          const pred = arr.dataSync() as Float32Array
           const prediction = getMaxPrediction(pred)
-          const THRESHOLD = 0.7;
+          const THRESHOLD = 0.9;
           if (prediction.probability > THRESHOLD) {
             console.log(prediction.class, prediction.probability)
 
